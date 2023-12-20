@@ -28,15 +28,15 @@ resource "aws_security_group" "webserver_access" {
 }
 
 resource "aws_instance" "ourfirst" {
-  ami           = "ami-03f4878755434977f"
-  availability_zone = "ap-south-1a"
-  instance_type = "t2.micro"
+  ami           = "ami-0fe8bec493a81c7da"
+  availability_zone = "eu-north-1a"
+  instance_type = "t3.micro"
   security_groups = ["${aws_security_group.webserver_access.name}"]
   key_name = "zoomkey"
   user_data = filebase64("install_apache.sh")
   tags = {
     Name  = "ec2-test"
-    Location = "Mumbai"
+    Location = "Stockholm"
   }
 
 }
