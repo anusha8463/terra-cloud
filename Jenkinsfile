@@ -18,6 +18,7 @@ pipeline {
 
     stages {
         stage('checkout') {
+            sh 'rm -rf terra-cloud'
             when {
                 not {
                     equals expected: true, actual: params.destroy
