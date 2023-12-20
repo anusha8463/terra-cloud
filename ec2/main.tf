@@ -28,7 +28,7 @@ resource "aws_security_group" "webserver_access" {
 }
 
 resource "aws_instance" "ourfirst" {
-  ami           = "ami-01a4f99c4ac11b03c"
+  ami           = "ami-03f4878755434977f"
   availability_zone = "ap-south-1a"
   instance_type = "t2.micro"
   security_groups = ["${aws_security_group.webserver_access.name}"]
