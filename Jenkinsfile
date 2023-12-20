@@ -23,13 +23,14 @@ pipeline {
                     equals expected: true, actual: params.destroy
                 }
             }
-            steps {
+             steps {
                  script{
                         dir("terraform")
                         {
-                            sh("""
-                                git clone "https://github.com/anusha8463/terra-cloud.git"
-                             """)
+                          sh("""
+                          rm -rf terra-cloud
+                        git clone "https://github.com/Anjalijaina/terra-cloud.git"
+                          """)
                         }
                     }
                 }
