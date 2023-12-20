@@ -43,7 +43,7 @@ pipeline {
             }
             
             steps {
-                sh 'terraform init -reconfigure'
+                sh 'terraform init -input=false'
                 sh 'terraform workspace new terraform'
 
                 sh "terraform plan -input=false -out tfplan "
