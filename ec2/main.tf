@@ -1,45 +1,95 @@
-provider "aws" {
-  region     = "eu-north-1"
-}
-#security group
-resource "aws_security_group" "webserver_access" {
-        name = "webserver_access"
-        description = "allow ssh and http"
+pipeline {
+    agent any
 
-        ingress {
-                from_port = 80
-                to_port = 80
-                protocol = "tcp"
-                cidr_blocks = ["0.0.0.0/0"]
+    parameters {
+        string(name: 'environment', defaultValue: 'terraform', description: 'Workspace/environment file to use for deployment')
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+        booleanParam(name: 'destroy', defaultValue: false, description: 'Destroy Terraform build?')
+
+    }
+
+
+     environment {
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_DEFAULT_REGION    = "ap-south-1"
+    }
+
+
+    stages {
+        stage('checkout') {
+            when {
+                not {
+                    equals expected: true, actual: params.destroy
+                }
+            }
+            steps {
+                 script{
+                        dir("terraform")
+                        {
+                            sh("""
+                                rm -rf terra-cloud
+                                git clone "https://github.com/naidunaveen/terra-cloud.git"
+                             """)
+                        }
+                    }
+                }
+            }
+
+        stage('Plan') {
+            when {
+                not {
+                    equals expected: true, actual: params.destroy
+                }
+            }
+            
+            steps {
+                sh 'terraform init -input=false'
+                sh 'terraform workspace select ${environment} || terraform workspace new ${environment}'
+
+                sh "terraform plan -input=false -out tfplan "
+                sh 'terraform show -no-color tfplan > tfplan.txt'
+            }
         }
+        stage('Approval') {
+           when {
+               not {
+                   equals expected: true, actual: params.autoApprove
+               }
+               not {
+                    equals expected: false, actual: params.destroy
+                }
+           }
+           steps {
+               script {
+                    def plan = readFile 'tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+               }
+           }
+       }
 
-        ingress {
-                from_port = 22
-                to_port = 22
-                protocol = "tcp"
-                cidr_blocks = ["0.0.0.0/0"]
+        stage('Apply') {
+            when {
+                not {
+                    equals expected: true, actual: params.destroy
+                }
+            }
+            
+            steps {
+                sh "terraform apply -input=false tfplan"
+            }
         }
-
-        egress {
-                from_port = 0
-                to_port = 0
-                protocol = "-1"
-                cidr_blocks = ["0.0.0.0/0"]
+        
+        stage('Destroy') {
+            when {
+                equals expected: true, actual: params.destroy
+            }
+        
+        steps {
+           sh "terraform destroy --auto-approve"
         }
+    }
 
-
-}
-
-resource "aws_instance" "ourfirst" {
-  ami           = "ami-0fe8bec493a81c7da"
-  #availability_zone = "eu-north-1a"
-  instance_type = "t3.micro"
-  security_groups = ["${aws_security_group.webserver_access.id}"]
-  key_name = "unixkeypair"
-  user_data = filebase64("install_apache.sh")
-  tags = {
-    Name  = "ec2-test"
-    Location = "Stockholm"
   }
-
 }
