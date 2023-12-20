@@ -1,3 +1,6 @@
+provider "aws" {
+  region     = "eu-north-1"
+}
 #security group
 resource "aws_security_group" "webserver_access" {
         name = "webserver_access"
@@ -29,7 +32,7 @@ resource "aws_security_group" "webserver_access" {
 
 resource "aws_instance" "ourfirst" {
   ami           = "ami-0fe8bec493a81c7da"
-  availability_zone = "eu-north-1a"
+  #availability_zone = "eu-north-1a"
   instance_type = "t3.micro"
   security_groups = ["${aws_security_group.webserver_access.id}"]
   key_name = "unixkeypair"
