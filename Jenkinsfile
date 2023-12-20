@@ -10,9 +10,9 @@ pipeline {
 
 
      environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+        AWS_ACCESS_KEY_ID   = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION    = "eu-north-1"
+        AWS_DEFAULT_REGION    = "ap-south-1"
     }
 
 
@@ -23,7 +23,7 @@ pipeline {
                     equals expected: true, actual: params.destroy
                 }
             }
-             steps {
+            steps {
                  script{
                         dir("terraform")
                         {
@@ -45,7 +45,7 @@ pipeline {
             
             steps {
                 sh 'terraform init -input=false'
-                sh 'terraform workspace select terraform'
+                sh 'terraform workspace select ${environment} || terraform workspace new ${environment}'
 
                 sh "terraform plan -input=false -out tfplan "
                 sh 'terraform show -no-color tfplan > tfplan.txt'
@@ -54,7 +54,7 @@ pipeline {
         stage('Approval') {
            when {
                not {
-                   equals expected: true, actual: params.autoApprove
+                   equals expected: false, actual: params.autoApprove
                }
                not {
                     equals expected: true, actual: params.destroy
@@ -93,4 +93,3 @@ pipeline {
 
   }
 }
-
