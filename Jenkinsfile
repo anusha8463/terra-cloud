@@ -29,7 +29,7 @@ pipeline {
                         {
                           sh("""
                           rm -rf terra-cloud
-                        git clone "https://github.com/Anjalijaina/terra-cloud.git"
+                        git clone "https://github.com/anusha8463/terra-cloud.git"
                           """)
                         }
                     }
